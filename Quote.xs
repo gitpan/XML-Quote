@@ -1,4 +1,4 @@
-/* $Version: release/perl/base/XML-Quote/Quote.xs,v 1.7 2003/01/24 15:16:44 godegisel Exp $ */
+/* $Version: release/perl/base/XML-Quote/Quote.xs,v 1.8 2003/01/25 13:17:40 godegisel Exp $ */
 
 #ifdef __cplusplus
 extern "C" {
@@ -33,30 +33,17 @@ static STRLEN XQ_quote_add[] = {
 0,0,5,0,0,0,4,5,0,0,0,0,0,0,0,0,
 // 0x30 - 0x3F
 0,0,0,0,0,0,0,0,0,0,0,0,3,0,3,0,
-// 0x40 - 0x4F
+};
+
+static STRLEN XQ_quote_add_min[] = {
+// 0x00 - 0x0F
 0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,
-// 0x50 - 0x5F
+// 0x10 - 0x1F
 0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,
-// 0x60 - 0x6F
-0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,
-// 0x70 - 0x7F
-0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,
-// 0x80 - 0x8F
-0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,
-// 0x90 - 0x9F
-0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,
-// 0xA0 - 0xAF
-0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,
-// 0xB0 - 0xBF
-0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,
-// 0xC0 - 0xCF
-0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,
-// 0xD0 - 0xDF
-0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,
-// 0xE0 - 0xEF
-0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,
-// 0xF0 - 0xFF
-0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,
+// 0x20 - 0x2F
+0,0,5,0,0,0,4,0,0,0,0,0,0,0,0,0,
+// 0x30 - 0x3F
+0,0,0,0,0,0,0,0,0,0,0,0,3,0,0,0,
 };
 
 //////////////////////////////////////////////////////////////////////////////
@@ -70,7 +57,6 @@ xml_quote(SV * srcSV)	{
 	STRLEN  src_len, src_len2, dst_len, offset;
 
 	src=SvPV(srcSV, src_len);	//length without trailing \0
-//	warn("src_len=%i",src_len);
 
 	dst_len=src_len;
 	src2=src;
@@ -79,9 +65,7 @@ xml_quote(SV * srcSV)	{
 	// calculate target string length
 	while(src_len2--)	{
 		c=*src2++;
-		offset=XQ_quote_add[c];
-//		warn("c=%c, off=%i",uc, offset);
-		if(offset)	{
+		if(c < 0x3F && (offset=XQ_quote_add[c]) )	{
 			dst_len+=offset;
 		}
 /* table lookup is faster (or not?...)
@@ -109,7 +93,6 @@ xml_quote(SV * srcSV)	{
 
         if(dst_len == src_len)	{
         	// nothing to quote
-//		warn("nothing to quote");
 		dstSV=newSVpv(src, dst_len);
 #ifdef XML_Util_UTF8
    		if(SvUTF8(srcSV))
@@ -118,7 +101,6 @@ xml_quote(SV * srcSV)	{
 		return dstSV;
         }
 
-//   	dstSV=newSVpv("",dst_len);
    	dstSV=newSV(dst_len);
 	SvCUR_set(dstSV, dst_len);
 	SvPOK_on(dstSV);
@@ -127,13 +109,12 @@ xml_quote(SV * srcSV)	{
 		SvUTF8_on(dstSV);
 #endif
 
-   	dst=SvPVX(dstSV);	//SvPV_nolen(dstSV);
+   	dst=SvPVX(dstSV);
 
    	while(src_len--)	{	// \0 also copied
-//		warn("copy %i",src_len);
 		c=*src++;
-//		if(c > 0x3E || c < 0x22)	{	// || < 0x22
-		if(! XQ_quote_add[c])	{
+//		if(c > 0x3E || c < 0x22)	{
+		if(c > 0x3E || ! XQ_quote_add[c])	{
 			*dst++=c;
 			continue;
 		}
@@ -169,6 +150,74 @@ xml_quote(SV * srcSV)	{
 		}else	{
    			// &apos;
    			*dst++='a'; *dst++='p'; *dst++='o'; *dst++='s';
+   		}//if
+		*dst++=';';
+	}//while
+
+	return dstSV;
+}
+//////////////////////////////////////////////////////////////////////////////
+
+static SV *
+xml_quote_min(SV * srcSV)	{
+	SV      * dstSV;
+	char	* src, * src2;
+	char	* dst;
+	char c;
+	STRLEN  src_len, src_len2, dst_len, offset;
+
+	src=SvPV(srcSV, src_len);	//length without trailing \0
+
+	dst_len=src_len;
+	src2=src;
+	src_len2=src_len;
+
+	// calculate target string length
+	while(src_len2--)	{
+		c=*src2++;
+		if(c < 0x3D && (offset=XQ_quote_add_min[c]) )	{
+			dst_len+=offset;
+		}
+	}//while
+
+        if(dst_len == src_len)	{
+        	// nothing to quote
+		dstSV=newSVpv(src, dst_len);
+#ifdef XML_Util_UTF8
+   		if(SvUTF8(srcSV))
+   			SvUTF8_on(dstSV);
+#endif
+		return dstSV;
+        }
+
+   	dstSV=newSV(dst_len);
+	SvCUR_set(dstSV, dst_len);
+	SvPOK_on(dstSV);
+#ifdef XML_Util_UTF8
+   	if(SvUTF8(srcSV))
+		SvUTF8_on(dstSV);
+#endif
+
+   	dst=SvPVX(dstSV);
+
+   	while(src_len--)	{	// \0 also copied
+		c=*src++;
+		if(c > 0x3C || ! XQ_quote_add_min[c])	{
+			*dst++=c;
+			continue;
+		}
+
+		*dst++='&';
+		if('&'==c)		{	// 0x26
+   			// &amp;
+			*dst++='a'; *dst++='m'; *dst++='p';
+		}else if('<'==c)	{	// 0x3C
+   			// &lt;
+   			*dst++='l'; *dst++='t';
+//		}else if('"'==c)	{	// 0x22
+		}else	{
+   			// &quot;
+			*dst++='q'; *dst++='u'; *dst++='o'; *dst++='t';
    		}//if
 		*dst++=';';
 	}//while
@@ -360,6 +409,19 @@ xml_quote(string)
 	}
    CODE:
 	RETVAL = xml_quote(string);
+   OUTPUT:
+	RETVAL
+
+
+SV *
+xml_quote_min(string)
+   SV *string
+   INIT:
+	if(!SvOK(string))	{
+		XSRETURN_UNDEF;
+	}
+   CODE:
+	RETVAL = xml_quote_min(string);
    OUTPUT:
 	RETVAL
 

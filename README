@@ -1,7 +1,7 @@
 Module: XML::Quote
 
 Description:
-    XML::Quote provides two functions to quote/dequote strings in "xml"-way.
+    XML::Quote provides functions to quote/dequote strings in "xml"-way.
 
 Copying:
     Copyright 2003 Sergey Skvortsov. All rights reserved.
