@@ -1,4 +1,4 @@
-/* $Version: release/perl/base/XML-Quote/Quote.xs,v 1.8 2003/01/25 13:17:40 godegisel Exp $ */
+/* $Version: release/perl/base/XML-Quote/Quote.xs,v 1.12 2003/01/31 09:16:58 godegisel Exp $ */
 
 #ifdef __cplusplus
 extern "C" {
@@ -11,6 +11,8 @@ extern "C" {
 #ifdef __cplusplus
 }
 #endif
+
+#define XQ_DEBUG	0
 
 #ifdef SVf_UTF8
 #define XML_Util_UTF8
@@ -51,21 +53,33 @@ static STRLEN XQ_quote_add_min[] = {
 static SV *
 xml_quote(SV * srcSV)	{
 	SV      * dstSV;
-	char	* src, * src2;
-	char	* dst;
-	char c;
+	unsigned char	* src, * src2;
+	unsigned char	* dst;
+	unsigned char c;
 	STRLEN  src_len, src_len2, dst_len, offset;
 
 	src=SvPV(srcSV, src_len);	//length without trailing \0
+
+#if XQ_DEBUG
+	warn("source=%s\n",src);
+	warn("src=%p\n",src);
+#endif
 
 	dst_len=src_len;
 	src2=src;
 	src_len2=src_len;
 
+#if XQ_DEBUG
+	warn("source length=%i\n",src_len);
+#endif
+
 	// calculate target string length
 	while(src_len2--)	{
 		c=*src2++;
 		if(c < 0x3F && (offset=XQ_quote_add[c]) )	{
+#if XQ_DEBUG
+			warn("add offset=%i [symbol=%i]\n",offset,c);
+#endif
 			dst_len+=offset;
 		}
 /* table lookup is faster (or not?...)
@@ -92,6 +106,9 @@ xml_quote(SV * srcSV)	{
 	}//while
 
         if(dst_len == src_len)	{
+#if XQ_DEBUG
+		warn("nothing to quote\n");
+#endif
         	// nothing to quote
 		dstSV=newSVpv(src, dst_len);
 #ifdef XML_Util_UTF8
@@ -100,6 +117,10 @@ xml_quote(SV * srcSV)	{
 #endif
 		return dstSV;
         }
+
+#if XQ_DEBUG
+	warn("dest length=%i\n",dst_len);
+#endif
 
    	dstSV=newSV(dst_len);
 	SvCUR_set(dstSV, dst_len);
@@ -113,6 +134,9 @@ xml_quote(SV * srcSV)	{
 
    	while(src_len--)	{	// \0 also copied
 		c=*src++;
+#if XQ_DEBUG
+		warn("src_len=%i symbol=%c src=%lx\n",src_len,c,src);
+#endif
 //		if(c > 0x3E || c < 0x22)	{
 		if(c > 0x3E || ! XQ_quote_add[c])	{
 			*dst++=c;
@@ -161,26 +185,41 @@ xml_quote(SV * srcSV)	{
 static SV *
 xml_quote_min(SV * srcSV)	{
 	SV      * dstSV;
-	char	* src, * src2;
-	char	* dst;
-	char c;
+	unsigned char	* src, * src2;
+	unsigned char	* dst;
+	unsigned char c;
 	STRLEN  src_len, src_len2, dst_len, offset;
 
 	src=SvPV(srcSV, src_len);	//length without trailing \0
+
+#if XQ_DEBUG
+	warn("source=%s\n",src);
+	warn("src=%p\n",src);
+#endif
 
 	dst_len=src_len;
 	src2=src;
 	src_len2=src_len;
 
+#if XQ_DEBUG
+	warn("source length=%i\n",src_len);
+#endif
+
 	// calculate target string length
 	while(src_len2--)	{
 		c=*src2++;
 		if(c < 0x3D && (offset=XQ_quote_add_min[c]) )	{
+#if XQ_DEBUG
+			warn("add offset=%i [symbol=%i]\n",offset,c);
+#endif
 			dst_len+=offset;
 		}
 	}//while
 
         if(dst_len == src_len)	{
+#if XQ_DEBUG
+		warn("nothing to quote\n");
+#endif
         	// nothing to quote
 		dstSV=newSVpv(src, dst_len);
 #ifdef XML_Util_UTF8
@@ -189,6 +228,10 @@ xml_quote_min(SV * srcSV)	{
 #endif
 		return dstSV;
         }
+
+#if XQ_DEBUG
+	warn("dest length=%i\n",dst_len);
+#endif
 
    	dstSV=newSV(dst_len);
 	SvCUR_set(dstSV, dst_len);
@@ -202,6 +245,9 @@ xml_quote_min(SV * srcSV)	{
 
    	while(src_len--)	{	// \0 also copied
 		c=*src++;
+#if XQ_DEBUG
+		warn("src_len=%i symbol=%c src=%lx\n",src_len,c,src);
+#endif
 		if(c > 0x3C || ! XQ_quote_add_min[c])	{
 			*dst++=c;
 			continue;
@@ -228,9 +274,9 @@ xml_quote_min(SV * srcSV)	{
 static SV *
 xml_dequote(SV * srcSV)	{
 	SV      * dstSV;
-	char	* src, *src2;
-	char	* dst;
-	char c,c1,c2,c3,c4;
+	unsigned char	* src, *src2;
+	unsigned char	* dst;
+	unsigned char c,c1,c2,c3,c4;
 	STRLEN  src_len, src_len2, dst_len;
 
 	src=SvPV(srcSV, src_len);	//length without trailing \0

@@ -1,10 +1,11 @@
 #!/usr/bin/perl
-# $Version: release/perl/base/XML-Quote/t/quote.t,v 1.4 2003/01/25 13:17:41 godegisel Exp $
+# $Version: release/perl/base/XML-Quote/t/quote.t,v 1.6 2003/01/31 09:13:12 godegisel Exp $
 package TEST_OVERLOAD;
 use overload '""' => sub {${$_[0]} ? 'true' : 'false'};
 
 sub new	{
-	bless \$_[1], $_[0];
+	my $v=$_[1];
+	bless \$v, $_[0];
 }
 
 package TEST_TIED;
@@ -81,9 +82,9 @@ my ($to_quote, $expected, $quoted, $dequoted);
 for my $arr (@tests)	{
 	my ($to_quote, $expected)=@$arr;
 	my $quoted=XML::Quote::xml_quote($to_quote);
-	is($quoted, $expected, ':'.$to_quote);
+	is($quoted, $expected, 'xml_quote:'.$to_quote);
 	my $dequoted=XML::Quote::xml_dequote($quoted);
-	is($dequoted, $to_quote, ':'.$expected);
+	is($dequoted, $to_quote, 'xml_dequote:'.$expected);
 }#for
 
 my @tests_min=(
@@ -132,9 +133,9 @@ q{некий &quot;тест >в &lt;'ютф8 &amp;},
 for my $arr (@tests_min)	{
 	my ($to_quote, $expected)=@$arr;
 	my $quoted=XML::Quote::xml_quote_min($to_quote);
-	is($quoted, $expected, ':'.$to_quote);
+	is($quoted, $expected, 'xml_quote_min:'.$to_quote);
 	my $dequoted=XML::Quote::xml_dequote($quoted);
-	is($dequoted, $to_quote, ':'.$expected);
+	is($dequoted, $to_quote, 'xml_dequote:'.$expected);
 }#for
 
 my @tests_overload=(
@@ -151,9 +152,9 @@ TEST_OVERLOAD->new(0),
 for my $arr (@tests_overload)	{
 	my ($to_quote, $expected)=@$arr;
 	my $quoted=XML::Quote::xml_quote($to_quote);
-	is($quoted, $expected, ':'.$to_quote);
+	is($quoted, $expected, 'over xml_quote:'.$to_quote);
 	my $dequoted=XML::Quote::xml_dequote($quoted);
-	is($dequoted, "$to_quote", ':'.$expected);
+	is($dequoted, "$to_quote", 'over xml_dequote:'.$expected);
 }#for
 
 tie(my $tied_scalar,'TEST_TIED');
@@ -169,9 +170,9 @@ use Devel::Peek;
 for my $arr (@tests_tied)	{
 	my ($to_quote, $expected)=@$arr;
 	my $quoted=XML::Quote::xml_quote($to_quote);
-	is($quoted, $expected, ':'.$to_quote);
+	is($quoted, $expected, 'tied xml_quote:'.$to_quote);
 	my $dequoted=XML::Quote::xml_dequote($quoted);
-	is($dequoted, "$to_quote", ':'.$expected);
+	is($dequoted, "$to_quote", 'tied xml_dequote:'.$expected);
 }#for
 
 my @tests2=(
@@ -191,6 +192,6 @@ for my $arr (@tests2)	{
 	my $cvt=XML::Quote::xml_dequote($bef);
 #	Dump($aft);
 #	Dump($cvt);
-	is($cvt, $aft, ':'.$bef);
+	is($cvt, $aft, 'xml_dequote:'.$bef);
 }#for
 

@@ -1,5 +1,5 @@
 package XML::Quote;
-# $Version: release/perl/base/XML-Quote/Quote.pm,v 1.5 2003/01/25 13:17:40 godegisel Exp $
+# $Version: release/perl/base/XML-Quote/Quote.pm,v 1.6 2003/01/31 09:03:57 godegisel Exp $
 
 use strict;
 use vars qw($VERSION @ISA @EXPORT @EXPORT_OK %EXPORT_TAGS);
@@ -25,7 +25,7 @@ require AutoLoader;
 	xml_quote_min
 	)],
 );
-$VERSION = '1.01';
+$VERSION = '1.02';
 
 bootstrap XML::Quote $VERSION;
 
